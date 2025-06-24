@@ -2,6 +2,8 @@ const OPENAI_API_KEY = 'AIzaSyDziz6GwGEICsbcA7RBOuBhwY7pgcPbkWo';
 const {GoogleGenerativeAI}  = require("@google/generative-ai");
 const Project = require("../model/project.js");
 const Task = require("../model/task.js");
+const AnalysisReport = require("../model/report");
+
 const dayjs = require('dayjs');
 
 exports.analyzer = async (body) => {
@@ -12,17 +14,17 @@ exports.analyzer = async (body) => {
       const projectTasks = tasks.filter(task => task.projectId.toString() === project._id.toString());
         const start = dayjs(project.startDate);
         const end = dayjs(project.endDate);
-      return {
-        projectName: project.name,
-        week: start.isValid() && end.isValid()
-              ? `${start.format('YYYY-MM-DD')} - ${end.format('YYYY-MM-DD')}`
-              : 'Invalid Date Range',       
-          expectedTasks: projectTasks.map(task => ({
-          taskName: task.taskName,
-          expectedHours: task.hours
-        }))
-      };
-    });
+        return {
+          projectName: project.name,
+          week: start.isValid() && end.isValid()
+                ? `${start.format('YYYY-MM-DD')} - ${end.format('YYYY-MM-DD')}`
+                : 'Invalid Date Range',       
+            expectedTasks: projectTasks.map(task => ({
+            taskName: task.taskName,
+            expectedHours: task.hours
+          }))
+        };
+      });
     
       const prompt = `
 You are a professional AI assistant responsible for analyzing a developer's weekly timesheet and comparing it against the manager's expected plan. Use the following JSON input:
@@ -129,6 +131,26 @@ Return your response in clean, scannable **HTML format** with appropriate use of
     try {
         const response = await callOpenAIWithRetry(prompt);
         const text = response.response.text(); 
+        await Promise.all(expectedPlan.map(async (plan) => {
+          const name = timesheetData.find(v => v.name)?.name || plan.projectName;
+          const week = plan.week;
+          const existing = await AnalysisReport.findOne({ name, week });
+            if (existing){
+                return {
+                success: 1,
+                statusCode: 404,
+                message: 'Already Report generated'
+              };  
+            }
+            // Create new report
+            await AnalysisReport.create({
+              name,
+              week,
+              htmlReport: text,
+            });
+          }));
+
+
         return {
             success: 1,
             statusCode: 200,
@@ -187,6 +209,33 @@ exports.projectList = async () => {
             error: error.message
         };
     }
+}
+
+exports.removeProject = async (projectId) => {
+     try {
+        const result = await Project.findByIdAndDelete(projectId);
+        if (!result) {
+            return {
+                success: 0,
+                statusCode: 404,
+                message: 'Project not found'
+            };
+        }
+        return {
+            success: 1,
+            statusCode: 200,
+            message: 'Project delete successfully'
+        };
+    } catch (error) {
+        console.error('Error fetching Projects:', error);
+        return {
+            success: 0,
+            statusCode: 500,
+            message: 'Failed to fetch Projects',
+            error: error.message
+        };
+    }
+       
 }
 
 async function callOpenAIWithRetry(prompt) {
