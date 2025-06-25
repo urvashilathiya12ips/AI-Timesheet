@@ -5,7 +5,6 @@ exports.taskList = async (req, res) => {
     const projectId = req.params.projectId;
     try {
         const result = await service.taskService.taskList(projectId);
-        console.log('result', result)
         if (!result)
             return responseData({
                 res,

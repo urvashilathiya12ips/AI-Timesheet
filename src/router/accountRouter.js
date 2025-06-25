@@ -11,7 +11,4 @@ router.get('/projectList', Controller.accountController.projectList);
 router.delete('/project/:projectId',Controller.accountController.removeProject)
 
 
-
-
-
 module.exports = router;

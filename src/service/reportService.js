@@ -2,7 +2,7 @@ const Report = require("../model/report");
 
 exports.reportList = async () => {
      try {
-        const reports = await Report.find();
+        const reports = await Report.find().sort({ createdAt: -1 });
         return {
             success: 1,
             statusCode: 200,
