@@ -3,6 +3,7 @@ const {GoogleGenerativeAI}  = require("@google/generative-ai");
 const Project = require("../model/project.js");
 const Task = require("../model/task.js");
 const AnalysisReport = require("../model/report");
+const _ = require('lodash');
 
 const dayjs = require('dayjs');
 
@@ -174,6 +175,18 @@ exports.project = async (body) => {
             message: 'All fields are required and at least one task must be provided.',
         };
     }
+    const existingProject = await Project.findOne({
+      name,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+    });
+    if (existingProject) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: "Project with same name and date range already exists",
+      };
+    }
     const project = await Project.create(
       { name, startDate: new Date(startDate), endDate: new Date(endDate) });
 
@@ -194,11 +207,12 @@ exports.project = async (body) => {
 exports.projectList = async () => {
     try {
         const projects = await Project.find();
+        const uniqueReports = _.uniqBy(projects, 'name')
         return {
             success: 1,
             statusCode: 200,
             message: 'Projects fetched successfully',
-            data: projects
+            data: uniqueReports 
         };
     } catch (error) {
         console.error('Error fetching projects:', error);

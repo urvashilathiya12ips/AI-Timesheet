@@ -2,7 +2,7 @@ const express = require('express');
 const router = new express.Router();
 const Controller = require('../controller');
 
-router.get('/taskList/:projectId', Controller.taskController.taskList);
+router.get('/taskList', Controller.taskController.taskList);
 
 router.post('/task/bulk', Controller.taskController.addTask);
 

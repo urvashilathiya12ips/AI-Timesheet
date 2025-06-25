@@ -1,22 +1,40 @@
 const Task = require("../model/task.js");
+const Project = require("../model/project.js");
 
-exports.taskList = async (projectId) => {
+exports.taskList = async (projectName) => {
      try {
-        const tasks = await Task.find({ projectId });
-        return {
-            success: 1,
-            statusCode: 200,
-            message: 'Tasks fetched successfully',
-            data: tasks
-        };
-    } catch (error) {
-        console.error('Error fetching tasks:', error);
-        return {
-            success: 0,
-            statusCode: 500,
-            message: 'Failed to fetch tasks',
-            error: error.message
-        };
+            const projects = await Project.find({ name : projectName });
+           const result = await Promise.all(
+            projects.map(async (project) => {
+              const tasks = await Task.find({ projectId: project._id });
+            
+              return {
+                _id: project._id,
+                name: project.name,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                tasks: tasks.map(task => ({
+                  _id: task._id,
+                  taskName: task.taskName,
+                  hours: task.hours
+                }))
+              };
+            })
+            );
+            return {
+                success: 1,
+                statusCode: 200,
+                message: 'Tasks fetched successfully',
+                data: result
+            };
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+            return {
+                success: 0,
+                statusCode: 500,
+                message: 'Failed to fetch tasks',
+                error: error.message
+            };
     }
        
 }

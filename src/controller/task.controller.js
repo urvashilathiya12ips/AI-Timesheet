@@ -2,9 +2,9 @@ const { responseData, responseMessage } = require('../helper/response');
 const service = require('../service/index');
 
 exports.taskList = async (req, res) => {
-    const projectId = req.params.projectId;
+    const projectName = req.query.projectName;
     try {
-        const result = await service.taskService.taskList(projectId);
+        const result = await service.taskService.taskList(projectName);
         if (!result)
             return responseData({
                 res,
