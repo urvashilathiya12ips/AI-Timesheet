@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db/connection'); // Adjust path as per your project
 
-const Report = sequelize.define('Report', {
-  id: {
+const AccountDetails = sequelize.define('AccountDetails', {
+  account_details_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -11,22 +11,14 @@ const Report = sequelize.define('Report', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-   report_date: {
-    type: DataTypes.DATE,
+  fullname: {
+    type: DataTypes.STRING,
     allowNull: false,
-  },
-   htmlReport: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-  },
+  }
 }, {
-  tableName: 'report',
+  tableName: 'tbl_account_details',
   timestamps: false, 
 });
 
-module.exports = Report;
+
+module.exports = AccountDetails;

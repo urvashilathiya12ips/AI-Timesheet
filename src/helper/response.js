@@ -1,3 +1,7 @@
+
+const OPENAI_API_KEY = 'AIzaSyDziz6GwGEICsbcA7RBOuBhwY7pgcPbkWo';
+const {GoogleGenerativeAI}  = require("@google/generative-ai");
+
 exports.responseData = ({ res, statusCode, success, message, data, error, pagination }) => {
     const resultObj = {
         success,
@@ -157,3 +161,49 @@ exports.responseMessage = (response, type = '', module = 'Data') => {
     }
     return return_message;
 };
+
+exports.generateReport = async (timesheet) => {
+   const prompt = `
+            You are a professional AI assistant responsible for analyzing a developer's weekly timesheet and comparing it against the manager's expected plan. Use the following JSON input:
+
+            **1. Developer’s Logged Timesheet Data:**
+            ${JSON.stringify(timesheet, null, 2)}
+            ---
+            ## Output Format (HTML Only)
+            Return your response in clean, scannable **HTML format** with appropriate use of:
+            - <table>, <tr>, <th>, <td> for comparisons
+            - <ul>, <li> for summaries
+            - <strong>, <u>, <i> for emphasis
+            ---
+            ### Sections to Include
+
+            - Table comparing:
+            - **Project Name**
+            - **Task Description** (summarize into 2–3 clear, concise lines based on user input — do not copy full raw text; extract only the key actions or decisions)
+            - **User Name**
+            - **Date** 
+            - **Time Spent (HH:MM:SS)**
+
+            🟡 If the same combination of Project Name, Task Description, User Name, and Date appears more than once, **combine them into a single row** by summing the time spent.
+
+            ### 2. <u>Project Summary</u>
+            - For each unique project:
+            - **Project Name**
+            - **Total Time Spent** (sum all time entries related to the project in HH:MM:SS format)
+
+            ---
+            ⚠️ Be precise with math. Do not estimate. Sum hours exactly.
+            ⚠️ Do not include full task description; distill user-provided task logs into meaningful, readable summaries in 2–3 lines.
+            ⚠️ Merge duplicate rows if they match on Project, Task, User, and Date.
+            `;
+
+        const response = await callOpenAIWithRetry(prompt);
+        return response.response.text();
+}
+
+async function callOpenAIWithRetry(prompt) {
+        const genAI = new GoogleGenerativeAI(OPENAI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        return result;
+}   

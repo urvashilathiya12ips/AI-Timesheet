@@ -1,9 +1,20 @@
-const mongoose = require('mongoose')
-mongoose.connect("mongodb+srv://Urvashi:Urvashi_itpath@cluster0.cq7joa7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
-  console.log("Database connection success");
-}).catch((error) =>
-  console.error(`Database connection failed, ${error.message}`)
-);
+const { Sequelize } = require('sequelize');
+
+const sequelize = new Sequelize('timesheet analysis', 'root', 'ips12345', {
+  host: 'localhost',
+  dialect: 'mysql',
+  logging: false 
+});
+
+sequelize.authenticate()
+  .then(() => {
+    console.log('✅ Connected to MySQL via Sequelize.');
+  })
+  .catch((err) => {
+    console.error('❌ Unable to connect to the database:', err);
+  });
+
+module.exports = sequelize;
+
+
+
